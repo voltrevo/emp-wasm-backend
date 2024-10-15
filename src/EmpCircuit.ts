@@ -278,6 +278,45 @@ export default class EmpCircuit {
 
     return output;
   }
+
+  eval(
+    aliceInput: Record<string, unknown>,
+    bobInput: Record<string, unknown>,
+  ): Record<string, unknown> {
+    const wires = new Uint8Array(this.metadata.wireCount);
+    let wireId = 0;
+
+    for (const bit of this.encodeInput('alice', aliceInput)) {
+      wires[wireId++] = bit;
+    }
+
+    for (const bit of this.encodeInput('bob', bobInput)) {
+      wires[wireId++] = bit;
+    }
+
+    for (const g of this.gates) {
+      switch (g.type) {
+        case 'AND':
+          wires[g.output] = wires[g.left] & wires[g.right];
+          break;
+
+        case 'XOR':
+          wires[g.output] = wires[g.left] ^ wires[g.right];
+          break;
+
+        case 'INV':
+          wires[g.output] = Number(!wires[g.input]);
+          break;
+
+        default:
+          never(g);
+      }
+    }
+
+    const outputBits = wires.slice(this.firstOutputWireId);
+
+    return this.decodeOutput(outputBits);
+  }
 }
 
 function sum(values: number[]): number {
