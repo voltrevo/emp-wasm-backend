@@ -1,0 +1,40 @@
+{
+  "name": "emp-wasm-backend",
+  "version": "0.1.0",
+  "description": "Backend for mpc-framework powered by emp-toolkit/emp-ag2pc",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "mocha --import=tsx tests/**/*.test.ts"
+  },
+  "keywords": [
+    "MPC",
+    "multi",
+    "party",
+    "computation",
+    "pse",
+    "cryptography"
+  ],
+  "author": "Andrew Morris",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/voltrevo/emp-wasm-backend.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chai": "^4.3.16",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.12.11",
+    "chai": "^5.1.1",
+    "ee-typed": "^0.1.0",
+    "mocha": "^10.4.0",
+    "mpc-framework": "^0.1.1",
+    "summon-ts": "^0.2.1",
+    "tsx": "^4.9.3",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "emp-wasm": "^0.1.2",
+    "mpc-framework-common": "^0.1.0"
+  }
+}
