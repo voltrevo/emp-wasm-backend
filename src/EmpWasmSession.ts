@@ -53,7 +53,7 @@ export default class EmpWasmSession implements BackendSession {
 
     const outputBits = await secure2PC(
       this.isAlice ? 'alice' : 'bob',
-      empCircuit.getBristol(),
+      empCircuit.getSimplifiedBristol(),
       empCircuit.encodeInput(this.isAlice ? 'alice' : 'bob', this.input),
       {
         send: data => this.send(this.peerName, data),
