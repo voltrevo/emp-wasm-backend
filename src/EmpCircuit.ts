@@ -3,10 +3,24 @@ import parseBristol, { Bristol } from "./parseBristol";
 import assert from "./assert";
 import never from "./never";
 
+type EmpGate = (
+  | { type: 'AND'; left: number; right: number; output: number }
+  | { type: 'XOR'; left: number; right: number; output: number }
+  | { type: 'INV'; input: number; output: number }
+);
+
 export default class EmpCircuit {
   private bristol: Bristol;
   private info: Circuit['info'];
-  private lines: string[] = [];
+
+  private metadata: {
+    wireCount: number;
+    aliceBits: number;
+    bobBits: number;
+    outputBits: number;
+  };
+  private gates: EmpGate[] = [];
+
   private aliceInputs: string[];
   private bobInputs: string[];
   private allInputs: string[];
@@ -87,20 +101,24 @@ export default class EmpCircuit {
         case 'XOR': {
           outputWireId = this.assignWireId();
 
-          this.lines.push([
-            '2 1',
-            this.getWireId(g.left),
-            this.getWireId(g.right),
-            outputWireId,
-            g.type,
-          ].join(' '));
+          this.gates.push({
+            type: g.type,
+            left: this.getWireId(g.left),
+            right: this.getWireId(g.right),
+            output: outputWireId,
+          });
 
           break;
         }
 
         case 'NOT': {
           outputWireId = this.assignWireId();
-          this.lines.push(`1 1 ${this.getWireId(g.input)} ${outputWireId} INV`);
+
+          this.gates.push({
+            type: 'INV',
+            input: this.getWireId(g.input),
+            output: outputWireId,
+          });
 
           break;
         }
@@ -113,10 +131,12 @@ export default class EmpCircuit {
           const notAAndNotB = this.assignWireId();
           outputWireId = this.assignWireId();
 
-          this.lines.push(`1 1 ${this.getWireId(g.left)} ${notA} INV`);
-          this.lines.push(`1 1 ${this.getWireId(g.right)} ${notB} INV`);
-          this.lines.push(`2 1 ${notA} ${notB} ${notAAndNotB} AND`);
-          this.lines.push(`1 1 ${notAAndNotB} ${outputWireId} INV`);
+          this.gates.push(
+            { type: 'INV', input: this.getWireId(g.left), output: notA },
+            { type: 'INV', input: this.getWireId(g.right), output: notB },
+            { type: 'AND', left: notA, right: notB, output: notAAndNotB },
+            { type: 'INV', input: notAAndNotB, output: outputWireId },
+          );
 
           break;
         }
@@ -154,14 +174,12 @@ export default class EmpCircuit {
       this.outputs.map((outputName) => this.getOutputWidth(outputName)),
     );
 
-    const gateCount = this.lines.length;
-    const wireCount = this.nextWireId;
-
-    this.lines.unshift(
-      `${gateCount} ${wireCount}`,
-      `${aliceTotalWidth} ${bobTotalWidth} ${outputTotalWidth}`,
-      '',
-    );
+    this.metadata = {
+      wireCount: this.nextWireId,
+      aliceBits: sum(this.aliceInputs.map((n) => this.getInputWidth(n))),
+      bobBits: sum(this.bobInputs.map((n) => this.getInputWidth(n))),
+      outputBits: sum(this.outputs.map((n) => this.getOutputWidth(n))),
+    };
   }
 
   private getWireId(oldWireId: number): number {
@@ -190,7 +208,29 @@ export default class EmpCircuit {
   }
 
   getSimplifiedBristol(): string {
-    return this.lines.join('\n');
+    const lines = [
+      `${this.gates.length} ${this.metadata.wireCount}`,
+      `${this.metadata.aliceBits} ${this.metadata.bobBits} ${this.metadata.outputBits}`,
+      '',
+    ];
+
+    for (const g of this.gates) {
+      switch (g.type) {
+        case 'AND':
+        case 'XOR':
+          lines.push(`2 1 ${g.left} ${g.right} ${g.output} ${g.type}`);
+          break;
+
+        case 'INV':
+          lines.push(`1 1 ${g.input} ${g.output} INV`);
+          break;
+
+        default:
+          never(g);
+      }
+    }
+
+    return lines.join('\n');
   }
 
   encodeInput(
