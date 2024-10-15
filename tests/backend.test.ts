@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import EmpCircuit from '../src/EmpCircuit';
 
 describe('EmpCircuit', () => {
-  it('converts or into and,not', async () => {
+  it('converts or into and,not', () => {
     const ec = new EmpCircuit(
       {
         bristol: `
@@ -34,8 +34,6 @@ describe('EmpCircuit', () => {
         },
       ],
     );
-
-    const out = ec.getSimplifiedBristol();
 
     expect(ec.getSimplifiedBristol()).to.equal([
       '4 6',
