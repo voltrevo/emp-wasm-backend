@@ -24,7 +24,6 @@ export default class EmpCircuit {
   ) {
     this.bristol = parseBristol(circuit.bristol);
     this.info = circuit.info;
-    this.lines.push(`${this.bristol.gates.length} ${this.bristol.wireCount}`);
 
     assert(
       mpcSettings.length === 2,
@@ -142,6 +141,27 @@ export default class EmpCircuit {
 
     assert(firstOutputWireId !== undefined, 'No output wires found');
     this.firstOutputWireId = firstOutputWireId;
+
+    const aliceTotalWidth = sum(
+      this.aliceInputs.map((inputName) => this.getInputWidth(inputName)),
+    );
+
+    const bobTotalWidth = sum(
+      this.bobInputs.map((inputName) => this.getInputWidth(inputName)),
+    );
+
+    const outputTotalWidth = sum(
+      this.outputs.map((outputName) => this.getOutputWidth(outputName)),
+    );
+
+    const gateCount = this.lines.length;
+    const wireCount = this.nextWireId;
+
+    this.lines.unshift(
+      `${gateCount} ${wireCount}`,
+      `${aliceTotalWidth} ${bobTotalWidth} ${outputTotalWidth}`,
+      '',
+    );
   }
 
   private getWireId(oldWireId: number): number {
@@ -218,4 +238,8 @@ export default class EmpCircuit {
 
     return output;
   }
+}
+
+function sum(values: number[]): number {
+  return values.reduce((a, b) => a + b, 0);
 }
