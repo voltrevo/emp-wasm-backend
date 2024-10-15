@@ -6,6 +6,7 @@ import defer from "./defer";
 import { pack } from "msgpackr";
 import buffersEqual from "./buffersEqual";
 import { Buffer } from 'buffer';
+import EmpCircuit from "./EmpCircuit";
 
 export default class EmpWasmSession implements BackendSession {
   peerName: string;
@@ -48,30 +49,22 @@ export default class EmpWasmSession implements BackendSession {
       throw new Error("Setup hash mismatch: check peer settings match");
     }
 
-    const { circuit, input, decodeResult } = this.getEmpCircuitData();
+    const empCircuit = new EmpCircuit(this.circuit, this.mpcSettings);
 
-    const resBits = await secure2PC(
+    const outputBits = await secure2PC(
       this.isAlice ? 'alice' : 'bob',
-      circuit,
-      input,
+      empCircuit.getBristol(),
+      empCircuit.encodeInput(this.isAlice ? 'alice' : 'bob', this.input),
       {
         send: data => this.send(this.peerName, data),
         recv: len => this.bq.pop(len),
       },
     );
 
-    this.result.resolve(decodeResult(resBits));
+    this.result.resolve(empCircuit.decodeOutput(outputBits));
   }
 
   output(): Promise<Record<string, unknown>> {
     return this.result.promise;
-  }
-
-  private getEmpCircuitData(): {
-    circuit: string,
-    input: Uint8Array,
-    decodeResult: (bits: Uint8Array) => Record<string, unknown>,
-  } {
-    throw new Error("TODO: implement");
   }
 }
