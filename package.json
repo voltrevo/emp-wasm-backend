@@ -35,6 +35,8 @@
   },
   "dependencies": {
     "emp-wasm": "^0.1.2",
-    "mpc-framework-common": "^0.1.0"
+    "mpc-framework-common": "^0.1.0",
+    "msgpackr": "^1.11.0",
+    "sha3": "^2.1.4"
   }
 }

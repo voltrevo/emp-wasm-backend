@@ -24,10 +24,10 @@ export default class EmpWasmBackend implements Backend {
       throw checkResult;
     }
 
-    const leaderName = mpcSettings[0].name ?? "0";
-    const followerName = mpcSettings[1].name ?? "1";
+    const aliceName = mpcSettings[0].name ?? "0";
+    const bobName = mpcSettings[1].name ?? "1";
 
-    if (name !== leaderName && name !== followerName) {
+    if (name !== aliceName && name !== bobName) {
       throw new Error(`Unknown participant name: ${name}`);
     }
 
@@ -36,7 +36,7 @@ export default class EmpWasmBackend implements Backend {
       mpcSettings,
       input,
       send,
-      name === leaderName,
+      name === aliceName,
     );
   }
 }
@@ -59,7 +59,7 @@ export function checkSettingsValidForEmpWasm(
       );
     }
 
-    // Note: It's also possible for the follower to get no outputs, but this is
+    // Note: It's also possible for the garbler to get no outputs, but this is
     // not currently supported here.
   }
 

@@ -1,4 +1,7 @@
+import { Keccak } from "sha3";
 import { BackendSession, Circuit, MpcSettings } from "mpc-framework-common";
+import { BufferQueue, secure2PC } from "emp-wasm";
+
 import defer from "./defer";
 import { pack } from "msgpackr";
 import buffersEqual from "./buffersEqual";
@@ -6,6 +9,7 @@ import { Buffer } from 'buffer';
 
 export default class EmpWasmSession implements BackendSession {
   peerName: string;
+  bq = new BufferQueue();
   result = defer<Record<string, unknown>>();
 
   constructor(
@@ -13,9 +17,9 @@ export default class EmpWasmSession implements BackendSession {
     public mpcSettings: MpcSettings,
     public input: Record<string, unknown>,
     public send: (to: string, msg: Uint8Array) => void,
-    public isLeader: boolean,
+    public isAlice: boolean,
   ) {
-    this.peerName = mpcSettings[isLeader ? 1 : 0].name ?? (isLeader ? "1" : "0");
+    this.peerName = mpcSettings[isAlice ? 1 : 0].name ?? (isAlice ? "1" : "0");
 
     this.run().catch(err => {
       this.result.reject(err);
@@ -28,38 +32,46 @@ export default class EmpWasmSession implements BackendSession {
       return;
     }
 
-    this.msgQueue.push(msg);
+    this.bq.push(msg);
   }
 
   async run() {
-    const initPromise = init(2);
-
     const setupHash = new Keccak().update(
       Buffer.from(pack([this.circuit, this.mpcSettings]))
     ).digest();
 
     this.send(this.peerName, setupHash);
 
-    const msg = await this.msgQueue.pop();
+    const msg = await this.bq.pop(32);
 
     if (!buffersEqual(msg, setupHash)) {
       throw new Error("Setup hash mismatch: check peer settings match");
     }
 
-    await initPromise;
+    const { circuit, input, decodeResult } = this.getEmpCircuitData();
 
-    const res = await runSemiHonest(
-      this.circuit,
-      this.input,
-      this.isLeader,
-      (msg: Uint8Array) => this.send(this.peerName, msg),
-      () => this.msgQueue.tryPop()?.value ?? new Uint8Array(),
+    const resBits = await secure2PC(
+      this.isAlice ? 'alice' : 'bob',
+      circuit,
+      input,
+      {
+        send: data => this.send(this.peerName, data),
+        recv: len => this.bq.pop(len),
+      },
     );
 
-    this.result.resolve(res);
+    this.result.resolve(decodeResult(resBits));
   }
 
   output(): Promise<Record<string, unknown>> {
     return this.result.promise;
+  }
+
+  private getEmpCircuitData(): {
+    circuit: string,
+    input: Uint8Array,
+    decodeResult: (bits: Uint8Array) => Record<string, unknown>,
+  } {
+    throw new Error("TODO: implement");
   }
 }
