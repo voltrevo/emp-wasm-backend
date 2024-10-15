@@ -101,7 +101,7 @@ export default class EmpCircuit {
 
         case 'NOT': {
           outputWireId = this.assignWireId();
-          this.lines.push(`1 1 ${this.getWireId(g.input)} ${outputWireId} NOT`);
+          this.lines.push(`1 1 ${this.getWireId(g.input)} ${outputWireId} INV`);
 
           break;
         }
@@ -114,10 +114,10 @@ export default class EmpCircuit {
           const notAAndNotB = this.assignWireId();
           outputWireId = this.assignWireId();
 
-          this.lines.push(`1 1 ${this.getWireId(g.left)} ${notA} NOT`);
-          this.lines.push(`1 1 ${this.getWireId(g.right)} ${notB} NOT`);
+          this.lines.push(`1 1 ${this.getWireId(g.left)} ${notA} INV`);
+          this.lines.push(`1 1 ${this.getWireId(g.right)} ${notB} INV`);
           this.lines.push(`2 1 ${notA} ${notB} ${notAAndNotB} AND`);
-          this.lines.push(`1 1 ${notAAndNotB} ${outputWireId} NOT`);
+          this.lines.push(`1 1 ${notAAndNotB} ${outputWireId} INV`);
 
           break;
         }
