@@ -37,7 +37,7 @@ export default class EmpWasmSession implements BackendSession {
   }
 
   async run() {
-    const setupHash = new Keccak().update(
+    const setupHash = new Keccak(256).update(
       Buffer.from(pack([this.circuit, this.mpcSettings]))
     ).digest();
 

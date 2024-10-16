@@ -11,10 +11,10 @@ async function main() {
 
   const [aliceComms, bobComms] = makeLocalCommsPair();
 
-  const circuit = summon.compileBoolean('/src/main.ts', 1, {
+  const circuit = summon.compileBoolean('/src/main.ts', 4, {
     '/src/main.ts': `
       export default function main(a: number, b: number) {
-        return a + b;
+        return [a + b, a * b];
       }
     `,
   });
@@ -23,12 +23,12 @@ async function main() {
     {
       name: 'alice',
       inputs: ['a'],
-      outputs: ['main'],
+      outputs: ['main[0]', 'main[1]'],
     },
     {
       name: 'bob',
       inputs: ['b'],
-      outputs: ['main'],
+      outputs: ['main[0]', 'main[1]'],
     },
   ];
 
@@ -53,7 +53,7 @@ async function main() {
 async function runAlice(protocol: Protocol, comms: LocalComms) {
   const session = protocol.join(
     'alice',
-    { a: 1 },
+    { a: 3 },
     (to, msg) => {
       assert(to === 'bob');
       comms.send(msg);
@@ -76,7 +76,7 @@ async function runAlice(protocol: Protocol, comms: LocalComms) {
 async function runBob(protocol: Protocol, comms: LocalComms) {
   const session = protocol.join(
     'bob',
-    { b: 0 },
+    { b: 5 },
     (to, msg) => {
       assert(to === 'alice');
       comms.send(msg);
