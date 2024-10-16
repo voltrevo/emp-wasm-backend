@@ -1,3 +1,6 @@
-tests
-*.tgz
-.vscode
+*
+!dist/src/**
+!src/**
+!package.json
+!LICENSE
+!README.md

@@ -4,7 +4,7 @@
   "description": "Backend for mpc-framework powered by emp-toolkit/emp-ag2pc",
   "main": "dist/src/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "test": "mocha --import=tsx tests/**/*.test.ts"
   },
   "keywords": [
