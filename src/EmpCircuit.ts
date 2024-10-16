@@ -377,9 +377,7 @@ export default class EmpCircuit {
       }
     }
 
-    const outputBits = wires.slice(this.firstOutputWireId);
-
-    return this.decodeOutput(outputBits);
+    return this.decodeOutput(wires.subarray(this.firstOutputWireId));
   }
 }
 
