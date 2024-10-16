@@ -52,15 +52,13 @@ describe('EmpCircuit', () => {
   });
 
   it('correctly evals circuit', () => {
-    const circuit = summon.compileBoolean('/src/main.ts', 2, {
+    const circuit = summon.compileBoolean('/src/main.ts', 4, {
       '/src/main.ts': `
         export default function main(a: number, b: number) {
-          return a + b;
+          return a * b;
         }
       `,
     });
-
-    console.log(circuit.bristol);
 
     const ec = new EmpCircuit(
       circuit,
@@ -77,10 +75,10 @@ describe('EmpCircuit', () => {
     );
 
     const outputs = ec.eval(
-      { a: 1 },
-      { b: 1 },
+      { a: 3 },
+      { b: 5 },
     );
 
-    expect(outputs).to.deep.equal({ main: 2 });
+    expect(outputs).to.deep.equal({ main: 15 });
   });
 });

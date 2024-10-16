@@ -31,6 +31,9 @@ export default class EmpCircuit {
   private firstOutputWireId: number;
 
   private nextWireId = 0;
+  private nextOutputWireId = -1;
+
+  private zeroWireId?: number;
 
   constructor(
     circuit: Circuit,
@@ -74,32 +77,24 @@ export default class EmpCircuit {
       assert(oldWireId !== undefined, `Input ${inputName} not found`);
 
       for (let i = 0; i < width; i++) {
-        const newWireId = this.assignWireId();
+        const newWireId = this.assignWireId('normal');
         this.wireIdMap.set(oldWireId + i, newWireId);
       }
     }
 
     const oldFirstOutputWireId = this.info.output_name_to_wire_index[this.outputs[0]];
-    let circuitOutputPhase = false;
-
-    let firstOutputWireId: number | undefined = undefined;
 
     for (const g of this.bristol.gates) {
       let outputWireId: number;
+      const wireType = g.output < oldFirstOutputWireId ? 'normal' : 'output';
 
-      const isCircuitOutput = g.output >= oldFirstOutputWireId;
-
-      if (circuitOutputPhase && !isCircuitOutput) {
-        throw new Error([
-          'Encountered non-output wire after output wire ',
-          '(this edge case is not currently implemented)'
-        ].join(''));
-      }
+      // Note wireType:output means an output of the *circuit*, not just an
+      // output of the gate
 
       switch (g.type) {
         case 'AND':
         case 'XOR': {
-          outputWireId = this.assignWireId();
+          outputWireId = this.assignWireId(wireType);
 
           this.gates.push({
             type: g.type,
@@ -108,11 +103,17 @@ export default class EmpCircuit {
             output: outputWireId,
           });
 
+          if (g.type === 'XOR' && g.left === g.right) {
+            // If the underlying circuit creates a zero wire we can also make
+            // use of it
+            this.zeroWireId ??= outputWireId;
+          }
+
           break;
         }
 
         case 'NOT': {
-          outputWireId = this.assignWireId();
+          outputWireId = this.assignWireId(wireType);
 
           this.gates.push({
             type: 'INV',
@@ -126,10 +127,10 @@ export default class EmpCircuit {
         case 'OR': {
           // or(a,b) == not(and(not(a), not(b)))
 
-          const notA = this.assignWireId();
-          const notB = this.assignWireId();
-          const notAAndNotB = this.assignWireId();
-          outputWireId = this.assignWireId();
+          const notA = this.assignWireId('normal');
+          const notB = this.assignWireId('normal');
+          const notAAndNotB = this.assignWireId('normal');
+          outputWireId = this.assignWireId(wireType);
 
           this.gates.push(
             { type: 'INV', input: this.getWireId(g.left), output: notA },
@@ -144,6 +145,26 @@ export default class EmpCircuit {
         case 'COPY': {
           outputWireId = this.getWireId(g.input);
 
+          const type = outputWireId >= 0 ? 'normal' : 'output';
+
+          if (type === 'normal' && wireType === 'output') {
+            // We can't just map this wire because it's a normal wire and we
+            // need an output wire. Therefore we need to implement actual
+            // copying, and emp-wasm doesn't provide a copy instruction.
+            // Instead, we can use XOR with a zero wire to copy the value.
+
+            const fixedOutputWireId = this.assignWireId('output');
+
+            this.gates.push({
+              type: 'XOR',
+              left: outputWireId,
+              right: this.getZeroWireId(),
+              output: fixedOutputWireId,
+            });
+
+            outputWireId = fixedOutputWireId;
+          }
+
           break;
         }
 
@@ -152,27 +173,44 @@ export default class EmpCircuit {
       }
 
       this.wireIdMap.set(g.output, outputWireId);
+    }
 
-      if (isCircuitOutput && !circuitOutputPhase) {
-        firstOutputWireId = outputWireId;
-        circuitOutputPhase = true;
+    const outputWireCount = -this.nextOutputWireId - 1;
+    this.firstOutputWireId = this.nextWireId;
+    this.nextWireId += outputWireCount;
+
+    const reassignOutputWireId = (wireId: number) => {
+      assert(wireId < 0);
+      return this.firstOutputWireId - wireId - 1;
+    };
+
+    for (const g of this.gates) {
+      if (g.output < 0) {
+        g.output = reassignOutputWireId(g.output);
+      }
+
+      if (g.type === 'AND' || g.type === 'XOR') {
+        if (g.left < 0) {
+          g.left = reassignOutputWireId(g.left);
+        }
+
+        if (g.right < 0) {
+          g.right = reassignOutputWireId(g.right);
+        }
+      } else if (g.type === 'INV') {
+        if (g.input < 0) {
+          g.input = reassignOutputWireId(g.input);
+        }
+      } else {
+        never(g);
       }
     }
 
-    assert(firstOutputWireId !== undefined, 'No output wires found');
-    this.firstOutputWireId = firstOutputWireId;
-
-    const aliceTotalWidth = sum(
-      this.aliceInputs.map((inputName) => this.getInputWidth(inputName)),
-    );
-
-    const bobTotalWidth = sum(
-      this.bobInputs.map((inputName) => this.getInputWidth(inputName)),
-    );
-
-    const outputTotalWidth = sum(
-      this.outputs.map((outputName) => this.getOutputWidth(outputName)),
-    );
+    for (const [oldId, newId] of this.wireIdMap.entries()) {
+      if (newId < 0) {
+        this.wireIdMap.set(oldId, reassignOutputWireId(newId));
+      }
+    }
 
     this.metadata = {
       wireCount: this.nextWireId,
@@ -189,8 +227,34 @@ export default class EmpCircuit {
     return wireId;
   }
 
-  private assignWireId(): number {
-    return this.nextWireId++;
+  private assignWireId(type: 'normal' | 'output'): number {
+    if (type === 'normal') {
+      return this.nextWireId++;
+    }
+
+    if (type === 'output') {
+      return this.nextOutputWireId--;
+    }
+
+    never(type);
+  }
+
+  private getZeroWireId(): number {
+    if (this.zeroWireId !== undefined) {
+      return this.zeroWireId;
+    }
+
+    const inputWireId = this.nextWireId > 0 ? 0 : this.assignWireId('normal');
+    this.zeroWireId = this.assignWireId('normal');
+
+    this.gates.push({
+      type: 'XOR',
+      left: inputWireId,
+      right: inputWireId,
+      output: this.zeroWireId,
+    });
+
+    return this.zeroWireId;
   }
 
   private getInputWidth(inputName: string): number {
