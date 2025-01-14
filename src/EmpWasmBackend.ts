@@ -5,7 +5,7 @@ import {
   Circuit,
   MpcSettings,
 } from "mpc-framework-common";
-import EmpWasmSession from "./EmpWasmSession";
+import EmpWasmSession from "./EmpWasmSession.js";
 
 export default class EmpWasmBackend implements Backend {
   run(

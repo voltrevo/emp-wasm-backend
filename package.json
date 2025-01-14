@@ -2,6 +2,7 @@
   "name": "emp-wasm-backend",
   "version": "0.2.0",
   "description": "Backend for mpc-framework powered by emp-toolkit/emp-ag2pc",
+  "type": "module",
   "main": "dist/src/index.js",
   "scripts": {
     "build": "rm -rf dist && tsc",
@@ -26,16 +27,16 @@
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.12.11",
     "chai": "^5.1.1",
-    "ee-typed": "^0.1.0",
+    "ee-typed": "^0.1.1",
     "mocha": "^10.4.0",
-    "mpc-framework": "^0.1.1",
-    "summon-ts": "^0.2.1",
+    "mpc-framework": "^0.1.2",
+    "summon-ts": "^0.2.5",
     "tsx": "^4.9.3",
     "typescript": "^5.4.5"
   },
   "dependencies": {
     "emp-wasm": "^0.1.7",
-    "mpc-framework-common": "^0.1.0",
+    "mpc-framework-common": "^0.1.1",
     "msgpackr": "^1.11.0",
     "sha3": "^2.1.4"
   }

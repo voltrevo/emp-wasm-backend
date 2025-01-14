@@ -1,7 +1,7 @@
 import { Circuit, MpcSettings } from "mpc-framework-common";
-import parseBristol, { Bristol } from "./parseBristol";
-import assert from "./assert";
-import never from "./never";
+import parseBristol, { Bristol } from "./parseBristol.js";
+import assert from "./assert.js";
+import never from "./never.js";
 
 type EmpGate = (
   | { type: 'AND'; left: number; right: number; output: number }
