@@ -2,11 +2,11 @@ import { Keccak } from "sha3";
 import { BackendSession, Circuit, MpcSettings } from "mpc-framework-common";
 import { BufferQueue, secure2PC } from "emp-wasm";
 
-import defer from "./defer";
+import defer from "./defer.js";
 import { pack } from "msgpackr";
-import buffersEqual from "./buffersEqual";
+import buffersEqual from "./buffersEqual.js";
 import { Buffer } from 'buffer';
-import EmpCircuit from "./EmpCircuit";
+import EmpCircuit from "./EmpCircuit.js";
 
 export default class EmpWasmSession implements BackendSession {
   peerName: string;
