@@ -1,6 +1,6 @@
 {
   "name": "emp-wasm-backend",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Backend for mpc-framework powered by emp-toolkit/emp-ag2pc",
   "type": "module",
   "main": "dist/src/index.js",
@@ -35,7 +35,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "emp-wasm": "^0.1.7",
+    "emp-wasm": "^0.1.8",
     "mpc-framework-common": "^0.1.1",
     "msgpackr": "^1.11.0",
     "sha3": "^2.1.4"
