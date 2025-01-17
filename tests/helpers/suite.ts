@@ -38,4 +38,6 @@ export async function runSuite() {
   }
 
   console.log(`Done running tests. ${failures} failure(s).`);
+
+  return { pass: suite.length - failures, fail: failures };
 }

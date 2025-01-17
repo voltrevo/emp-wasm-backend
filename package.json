@@ -30,6 +30,7 @@
     "ee-typed": "^0.1.1",
     "glob": "^11.0.1",
     "mpc-framework": "^0.1.2",
+    "puppeteer-core": "^24.1.0",
     "summon-ts": "^0.2.5",
     "tsx": "^4.9.3",
     "typescript": "^5.4.5",
