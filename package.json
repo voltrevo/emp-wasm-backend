@@ -6,7 +6,10 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "test": "mocha --import=tsx tests/**/*.test.ts"
+    "test-node": "tsx tests/runNode.ts",
+    "test-browser": "tsx tests/runBrowser.ts",
+    "test-browser-dev": "vite dev --config tests/vite.config.ts",
+    "test": "npm run test-node && npm run test-browser"
   },
   "keywords": [
     "MPC",
@@ -23,16 +26,17 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@types/chai": "^4.3.16",
-    "@types/mocha": "^10.0.6",
+    "@types/chai": "^4.3.20",
     "@types/node": "^20.12.11",
-    "chai": "^5.1.1",
+    "chai": "^5.1.2",
     "ee-typed": "^0.1.1",
-    "mocha": "^10.4.0",
-    "mpc-framework": "^0.1.2",
+    "glob": "^11.0.1",
+    "mpc-framework": "^0.1.4",
+    "puppeteer-core": "^24.1.0",
     "summon-ts": "^0.2.5",
     "tsx": "^4.9.3",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vite": "^6.0.7"
   },
   "dependencies": {
     "emp-wasm": "^0.1.8",
