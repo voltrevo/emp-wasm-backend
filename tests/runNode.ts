@@ -1,32 +1,22 @@
-import { spawn, exec } from 'child_process';
+import { exec } from 'child_process';
 import { globIterate } from 'glob';
+import { runSuite, setSuiteAutorun } from './helpers/suite';
 
-const projectRoot = (await shell('git', ['rev-parse', '--show-toplevel'])).trim();
+const projectRoot = (
+  await shell('git', ['rev-parse', '--show-toplevel'])
+).trim();
 
 const pattern = `${projectRoot}/tests/**/*.test.ts`;
 
-const summary = [''];
-let allPassed = true;
+setSuiteAutorun(false);
 
 for await (const filePath of globIterate(pattern)) {
-  let pass = true;
-
-  try {
-    await shellTerminal(`${projectRoot}/node_modules/.bin/tsx`, [filePath]);
-  } catch {
-    pass = false;
-    allPassed = false;
-  }
-
-  summary.push(`${pass ? '✅' : '❌'} ${filePath.replace(projectRoot + '/', '')}`);
+  await import(filePath);
 }
 
-console.log(summary.join('\n'));
+const result = await runSuite();
 
-console.log();
-console.log(allPassed ? 'All tests passed' : 'Some tests failed');
-
-if (!allPassed) {
+if (result === undefined || result.fail > 0) {
   process.exit(1);
 }
 
@@ -38,20 +28,6 @@ async function shell(program: string, args: string[]) {
         reject(err);
       } else {
         resolve(stdout);
-      }
-    });
-  });
-}
-
-async function shellTerminal(program: string, args: string[]) {
-  return new Promise<void>((resolve, reject) => {
-    const child = spawn(program, args, { stdio: 'inherit' });
-
-    child.on('exit', (code) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`Process exited with code ${code}`));
       }
     });
   });
