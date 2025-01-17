@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 
-import * as mpcf from 'mpc-framework';
+import { Protocol } from 'mpc-framework';
 import * as summon from 'summon-ts';
+
 
 import { EmpWasmBackend } from '../src';
 import assert from '../src/assert';
@@ -33,7 +34,7 @@ test("max(3, 5) === 5", async () => {
     },
   ];
 
-  const protocol = new mpcf.Protocol(
+  const protocol = new Protocol(
     circuit,
     mpcSettings,
     new EmpWasmBackend(),
@@ -51,7 +52,7 @@ test("max(3, 5) === 5", async () => {
 });
 
 async function runSide(
-  protocol: mpcf.Protocol,
+  protocol: Protocol,
   side: 'alice' | 'bob',
   input: Record<string, number>,
   aliceQueue: AsyncQueue<Uint8Array>,
