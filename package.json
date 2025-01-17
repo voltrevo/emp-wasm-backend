@@ -7,7 +7,9 @@
   "scripts": {
     "build": "rm -rf dist && tsc",
     "test-node": "tsx tests/runNode.ts",
-    "test-browser-dev": "vite dev --config tests/vite.config.ts"
+    "test-browser": "tsx tests/runBrowser.ts",
+    "test-browser-dev": "vite dev --config tests/vite.config.ts",
+    "test": "npm run test-node && npm run test-browser"
   },
   "keywords": [
     "MPC",
