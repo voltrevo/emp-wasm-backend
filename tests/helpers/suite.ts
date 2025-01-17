@@ -26,7 +26,7 @@ export async function runSuite() {
 
   console.log(`Running ${capturedSuite.length} tests...`);
 
-  const puppeteerDetected = (window as any).reportToPuppeteer !== undefined;
+  const puppeteerDetected = (globalThis as any).reportToPuppeteer !== undefined;
 
   for (const { name, fn } of capturedSuite) {
     try {
