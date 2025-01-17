@@ -18,7 +18,7 @@ const page = await browser.newPage();
 await page.goto(url);
 
 page.on('console', (message) => {
-  console.log('Page log:', message.text());
+  console.log(`Page ${message.type()}:`, message.text());
 });
 
 await new Promise<void>((resolve, reject) => {

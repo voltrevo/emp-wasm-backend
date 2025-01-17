@@ -26,6 +26,8 @@ export async function runSuite() {
 
   console.log(`Running ${capturedSuite.length} tests...`);
 
+  const puppeteerDetected = (window as any).reportToPuppeteer !== undefined;
+
   for (const { name, fn } of capturedSuite) {
     try {
       await fn();
@@ -33,7 +35,16 @@ export async function runSuite() {
     } catch (e) {
       failures++;
       console.error(`❌ ${name}`);
-      console.error(e);
+
+      if (!puppeteerDetected) {
+        console.error(e);
+      } else {
+        try {
+          console.error((e as Error).stack);
+        } catch {
+          console.error(`${e}`);
+        }
+      }
     }
   }
 
