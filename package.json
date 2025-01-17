@@ -6,7 +6,8 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "test": "tsx tests/runNode.ts"
+    "test-node": "tsx tests/runNode.ts",
+    "test-browser-dev": "vite dev --config tests/vite.config.ts"
   },
   "keywords": [
     "MPC",
@@ -23,15 +24,16 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@types/chai": "^4.3.16",
+    "@types/chai": "^4.3.20",
     "@types/node": "^20.12.11",
+    "chai": "^5.1.2",
     "ee-typed": "^0.1.1",
     "glob": "^11.0.1",
     "mpc-framework": "^0.1.2",
     "summon-ts": "^0.2.5",
-    "tap": "^21.0.1",
     "tsx": "^4.9.3",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vite": "^6.0.7"
   },
   "dependencies": {
     "emp-wasm": "^0.1.8",

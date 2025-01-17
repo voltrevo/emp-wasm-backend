@@ -1,9 +1,10 @@
-import t from 'tap';
+import { expect } from 'chai';
 
 import * as summon from 'summon-ts';
 import EmpCircuit from '../src/EmpCircuit';
+import { test } from './helpers/suite';
 
-t.test('converts OR into INV INV AND INV', async t => {
+test('converts OR into INV INV AND INV', async () => {
   await summon.init();
 
   const ec = new EmpCircuit(
@@ -38,7 +39,7 @@ t.test('converts OR into INV INV AND INV', async t => {
     ],
   );
 
-  t.strictSame(ec.getSimplifiedBristol(), [
+  expect(ec.getSimplifiedBristol()).to.deep.equal([
     '4 6',
     '1 1 1',
     '',
@@ -49,7 +50,7 @@ t.test('converts OR into INV INV AND INV', async t => {
   ].join('\n'));
 });
 
-t.test('correctly evals circuit', async t => {
+test('correctly evals circuit', async () => {
   await summon.init();
 
   const circuit = summon.compileBoolean('/src/main.ts', 4, {
@@ -79,5 +80,5 @@ t.test('correctly evals circuit', async t => {
     { b: 5 },
   );
 
-  t.strictSame(outputs, { main: 15 });
+  expect(outputs).to.deep.equal({ main: 15 });
 });

@@ -1,4 +1,4 @@
-import t from 'tap';
+import { expect } from 'chai';
 
 import * as mpcf from 'mpc-framework';
 import * as summon from 'summon-ts';
@@ -7,8 +7,9 @@ import { EmpWasmBackend } from '../src';
 import assert from '../src/assert';
 
 import AsyncQueue from './helpers/AsyncQueue';
+import { test } from './helpers/suite';
 
-t.test("max(3, 5) === 5", async t => {
+test("max(3, 5) === 5", async () => {
   await summon.init();
 
   const circuit = summon.compileBoolean('/src/main.ts', 16, {
@@ -46,7 +47,7 @@ t.test("max(3, 5) === 5", async t => {
     runSide(protocol, 'bob', { b: 5 }, aliceQueue, bobQueue),
   ]);
 
-  t.strictSame(outputs, [{ main: 5 }, { main: 5 }]);
+  expect(outputs).to.deep.equal([{ main: 5 }, { main: 5 }]);
 });
 
 async function runSide(
