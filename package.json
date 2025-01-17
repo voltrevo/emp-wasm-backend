@@ -6,7 +6,7 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "test": "mocha --import=tsx tests/**/*.test.ts"
+    "test": "tsx tests/runNode.ts"
   },
   "keywords": [
     "MPC",
@@ -24,13 +24,12 @@
   "license": "MIT",
   "devDependencies": {
     "@types/chai": "^4.3.16",
-    "@types/mocha": "^10.0.6",
     "@types/node": "^20.12.11",
-    "chai": "^5.1.1",
     "ee-typed": "^0.1.1",
-    "mocha": "^10.4.0",
+    "glob": "^11.0.1",
     "mpc-framework": "^0.1.2",
     "summon-ts": "^0.2.5",
+    "tap": "^21.0.1",
     "tsx": "^4.9.3",
     "typescript": "^5.4.5"
   },
