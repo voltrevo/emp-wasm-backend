@@ -1,4 +1,5 @@
 import { Keccak } from "sha3";
+
 import { BackendSession, Circuit, MpcSettings } from "mpc-framework-common";
 import { BufferQueue, secure2PC } from "emp-wasm";
 
@@ -6,6 +7,7 @@ import defer from "./defer.js";
 import buffersEqual from "./buffersEqual.js";
 import EmpCircuit from "./EmpCircuit.js";
 import packBuffer from "./packBuffer.js";
+import sortKeys from 'sort-keys';
 
 export default class EmpWasmSession implements BackendSession {
   peerName: string;
@@ -37,7 +39,7 @@ export default class EmpWasmSession implements BackendSession {
 
   async run() {
     const setupHash = Uint8Array.from(new Keccak(256).update(
-      packBuffer([this.circuit, this.mpcSettings])
+      packBuffer([sortKeys(this.circuit, { deep: true }), sortKeys(this.mpcSettings, { deep: true })])
     ).digest());
 
     this.send(this.peerName, setupHash);

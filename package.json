@@ -42,6 +42,7 @@
     "emp-wasm": "^0.1.8",
     "mpc-framework-common": "^0.1.1",
     "msgpackr": "^1.11.0",
-    "sha3": "^2.1.4"
+    "sha3": "^2.1.4",
+    "sort-keys": "^5.1.0"
   }
 }
