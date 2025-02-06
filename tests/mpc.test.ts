@@ -116,8 +116,11 @@ test("middle(8, 17, 5) == 8", async () => {
   ]);
 });
 
-// FIXME: this test skipped
+// FIXME: this test is skipped
 // FIXME: use 5 bidders and auction house (which doesn't bid but observes)
+// NOTE:  this circuit also failed with consensus on the same bad outputs before
+//        the N parties upgrade, so there's something else going on:
+//        https://github.com/voltrevo/emp-wasm-backend/commit/be67477
 testOpt("vickrey(8, 17, 5) == [1, 8]", { skip: true }, async () => {
   await summon.init();
 
