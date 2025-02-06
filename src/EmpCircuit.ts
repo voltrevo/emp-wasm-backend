@@ -15,14 +15,14 @@ export default class EmpCircuit {
 
   private metadata: {
     wireCount: number;
-    aliceBits: number;
-    bobBits: number;
+    inputBits0: number;
+    inputBits1: number;
     outputBits: number;
   };
   private gates: EmpGate[] = [];
 
-  private aliceInputs: string[];
-  private bobInputs: string[];
+  private partyNames: string[] = [];
+  private partyInputs: Record<string, string[]> = {};
   private allInputs: string[];
   private outputs: string[];
 
@@ -42,36 +42,55 @@ export default class EmpCircuit {
     this.bristol = parseBristol(circuit.bristol);
     this.info = circuit.info;
 
-    assert(
-      mpcSettings.length === 2,
-      'Expected exactly two participants',
-    );
+    const partyNamesSet = new Set<string>();
 
-    this.aliceInputs = mpcSettings[0].inputs;
-    this.aliceInputs.sort((a, b) =>
-      circuit.info.input_name_to_wire_index[a] -
-      circuit.info.input_name_to_wire_index[b],
-    );
+    for (let i = 0; i < mpcSettings.length; i++) {
+      const partyName = mpcSettings[i].name ?? `party${i}`;
+      this.partyNames.push(partyName);
 
-    this.bobInputs = mpcSettings[1].inputs;
-    this.bobInputs.sort((a, b) =>
-      circuit.info.input_name_to_wire_index[a] -
-      circuit.info.input_name_to_wire_index[b],
-    );
+      assert(!partyNamesSet.has(partyName), `Duplicate party name ${partyName}`);
+      partyNamesSet.add(partyName);
+    }
 
-    this.allInputs = [...this.aliceInputs, ...this.bobInputs];
+    this.allInputs = [];
+
+    for (const [i, partyName] of this.partyNames.entries()) {
+      this.partyInputs[partyName] = mpcSettings[i].inputs.slice();
+      this.partyInputs[partyName].sort((a, b) =>
+        circuit.info.input_name_to_wire_index[a] -
+        circuit.info.input_name_to_wire_index[b],
+      );
+
+      this.allInputs.push(...this.partyInputs[partyName]);
+    }
+
     this.allInputs.sort((a, b) =>
       circuit.info.input_name_to_wire_index[a] -
       circuit.info.input_name_to_wire_index[b],
     );
 
-    this.outputs = mpcSettings[0].outputs;
+    const outputNames = new Set<string>();
+
+    for (const mpcSetting of mpcSettings) {
+      for (const output of mpcSetting.outputs) {
+        outputNames.add(output);
+      }
+    }
+
+    this.outputs = [...outputNames];
     this.outputs.sort((a, b) =>
       circuit.info.output_name_to_wire_index[a] -
       circuit.info.output_name_to_wire_index[b],
     );
 
-    for (const inputName of [...this.aliceInputs, ...this.bobInputs]) {
+    // The emp-wasm backend requires each party's input bits to be contiguous.
+    const allInputsInPartyOrder: string[] = [];
+
+    for (const partyName of this.partyNames) {
+      allInputsInPartyOrder.push(...this.partyInputs[partyName]);
+    }
+
+    for (const inputName of allInputsInPartyOrder) {
       const width = this.getInputWidth(inputName);
       const oldWireId = this.info.input_name_to_wire_index[inputName];
       assert(oldWireId !== undefined, `Input ${inputName} not found`);
@@ -212,10 +231,29 @@ export default class EmpCircuit {
       }
     }
 
+    // For 2PC, these correspond to the number of bits from each party.
+    // For 3+PC, the only thing that matters is the total number of input bits
+    // is correct.
+    let inputBits0: number;
+    let inputBits1: number;
+
+    if (this.partyNames.length === 2) {
+      inputBits0 = sum(
+        this.partyInputs[this.partyNames[0]].map((n) => this.getInputWidth(n)),
+      );
+
+      inputBits1 = sum(
+        this.partyInputs[this.partyNames[1]].map((n) => this.getInputWidth(n)),
+      );
+    } else {
+      inputBits0 = sum(this.allInputs.map((n) => this.getInputWidth(n)));
+      inputBits1 = 0;
+    }
+
     this.metadata = {
       wireCount: this.nextWireId,
-      aliceBits: sum(this.aliceInputs.map((n) => this.getInputWidth(n))),
-      bobBits: sum(this.bobInputs.map((n) => this.getInputWidth(n))),
+      inputBits0,
+      inputBits1,
       outputBits: sum(this.outputs.map((n) => this.getOutputWidth(n))),
     };
   }
@@ -271,10 +309,16 @@ export default class EmpCircuit {
     return this.bristol.outputWidths[outputIndex];
   }
 
+  getInputBitsPerParty(): number[] {
+    return this.partyNames.map((partyName) =>
+      sum(this.partyInputs[partyName].map((n) => this.getInputWidth(n))),
+    );
+  }
+
   getSimplifiedBristol(): string {
     const lines = [
       `${this.gates.length} ${this.metadata.wireCount}`,
-      `${this.metadata.aliceBits} ${this.metadata.bobBits} ${this.metadata.outputBits}`,
+      `${this.metadata.inputBits0} ${this.metadata.inputBits1} ${this.metadata.outputBits}`,
       '',
     ];
 
@@ -298,10 +342,11 @@ export default class EmpCircuit {
   }
 
   encodeInput(
-    party: 'alice' | 'bob',
+    party: string,
     input: Record<string, unknown>,
   ): Uint8Array {
-    const inputNames = party === 'alice' ? this.aliceInputs : this.bobInputs;
+    const inputNames = this.partyInputs[party];
+    assert(inputNames !== undefined, `Party ${party} not found`);
 
     const bits: boolean[] = [];
 
@@ -344,18 +389,25 @@ export default class EmpCircuit {
   }
 
   eval(
-    aliceInput: Record<string, unknown>,
-    bobInput: Record<string, unknown>,
+    inputs: Record<string, Record<string, unknown>>,
+    //              ^ party name  ^ input name
+    // eg: {
+    //   alice: { a: 3 },
+    //   bob: { b: 5 },
+    // }
   ): Record<string, unknown> {
     const wires = new Uint8Array(this.metadata.wireCount);
     let wireId = 0;
 
-    for (const bit of this.encodeInput('alice', aliceInput)) {
-      wires[wireId++] = bit;
+    for (const party of this.partyNames) {
+      assert(inputs[party] !== undefined, `Inputs for party ${party} not found`);
+      for (const bit of this.encodeInput(party, inputs[party])) {
+        wires[wireId++] = bit;
+      }
     }
 
-    for (const bit of this.encodeInput('bob', bobInput)) {
-      wires[wireId++] = bit;
+    for (const party of Object.keys(inputs)) {
+      assert(this.partyNames.includes(party), `Unknown party ${party}`);
     }
 
     for (const g of this.gates) {
