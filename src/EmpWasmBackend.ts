@@ -6,6 +6,7 @@ import {
   MpcSettings,
 } from "mpc-framework-common";
 import EmpWasmSession from "./EmpWasmSession.js";
+import EmpCircuit from "./EmpCircuit.js";
 
 export default class EmpWasmBackend implements Backend {
   run(
@@ -24,19 +25,14 @@ export default class EmpWasmBackend implements Backend {
       throw checkResult;
     }
 
-    const aliceName = mpcSettings[0].name ?? "0";
-    const bobName = mpcSettings[1].name ?? "1";
-
-    if (name !== aliceName && name !== bobName) {
-      throw new Error(`Unknown participant name: ${name}`);
-    }
+    const empCircuit = new EmpCircuit(circuit, mpcSettings);
 
     return new EmpWasmSession(
-      circuit,
+      empCircuit,
       mpcSettings,
       input,
       send,
-      name === aliceName,
+      name,
     );
   }
 }
@@ -45,10 +41,6 @@ export function checkSettingsValidForEmpWasm(
   circuit: Circuit,
   mpcSettings: MpcSettings,
 ): Error | undefined {
-  if (mpcSettings.length !== 2) {
-    return new Error("EmpWasmBackend requires exactly two participants");
-  }
-
   for (const participant of mpcSettings) {
     if (!checkStringSetsEqual(
       participant.outputs,

@@ -1,15 +1,29 @@
-type TestDefinition = { name: string, fn: () => unknown };
+type TestDefinition = {
+  name: string,
+  options: {
+    skip?: boolean,
+  },
+  fn: () => unknown,
+};
 
 let suite: TestDefinition[] = [];
 let failures = 0;
 let autorun = true;
 
-export async function test(name: string, fn: () => unknown) {
-  suite.push({ name, fn });
+export async function testOpt(
+  name: string,
+  options: TestDefinition['options'],
+  fn: () => unknown,
+) {
+  suite.push({ name, options, fn });
 
   if (autorun) {
     queueMicrotask(runSuite);
   }
+}
+
+export async function test(name: string, fn: () => unknown) {
+  return testOpt(name, {}, fn);
 }
 
 export function setSuiteAutorun(value: boolean) {
@@ -28,7 +42,12 @@ export async function runSuite() {
 
   const puppeteerDetected = (globalThis as any).reportToPuppeteer !== undefined;
 
-  for (const { name, fn } of capturedSuite) {
+  for (const { name, options, fn } of capturedSuite) {
+    if (options.skip) {
+      console.log(`🟡 SKIPPED: ${name}`);
+      continue;
+    }
+
     try {
       await fn();
       console.log(`✅ ${name}`);

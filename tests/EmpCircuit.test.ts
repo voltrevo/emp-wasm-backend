@@ -65,20 +65,22 @@ test('correctly evals circuit', async () => {
     circuit,
     [
       {
+        name: 'alice',
         inputs: ['a'],
         outputs: ['main'],
       },
       {
+        name: 'bob',
         inputs: ['b'],
         outputs: ['main'],
       },
     ],
   );
 
-  const outputs = ec.eval(
-    { a: 3 },
-    { b: 5 },
-  );
+  const outputs = ec.eval({
+    alice: { a: 3 },
+    bob: { b: 5 },
+  });
 
   expect(outputs).to.deep.equal({ main: 15 });
 });
