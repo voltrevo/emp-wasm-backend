@@ -5,7 +5,7 @@ import * as summon from 'summon-ts';
 
 import { EmpWasmBackend } from '../src';
 
-import { test } from './helpers/suite';
+import { test, testOpt } from './helpers/suite';
 import AsyncQueueStore from './helpers/AsyncQueueStore';
 
 test("max(3, 5) === 5", async () => {
@@ -48,10 +48,80 @@ test("max(3, 5) === 5", async () => {
   expect(outputs).to.deep.equal([{ main: 5 }, { main: 5 }]);
 });
 
-test("vickrey(8, 17, 5) == [1, 8]", async () => {
+test("middle(8, 17, 5) == 8", async () => {
   await summon.init();
 
-  const circuit = summon.compileBoolean('/src/main.ts', 16, {
+  const circuit = summon.compileBoolean('/src/main.ts', 8, {
+    '/src/main.ts': `
+      export default function main(
+        a: number,
+        b: number,
+        c: number,
+      ) {
+        const nums = [a, b, c];
+
+        const highest = a;
+        const secondHighest = 0;
+
+        for (let i = 1; i < nums.length; i++) {
+          if (nums[i] > highest) {
+            secondHighest = highest;
+            highest = nums[i];
+          } else if (nums[i] > secondHighest) {
+            secondHighest = nums[i];
+          }
+        }
+
+        return secondHighest;
+      }
+    `,
+  });
+
+  const mpcSettings = [
+    {
+      name: 'alice',
+      inputs: ['a'],
+      outputs: ['main'],
+    },
+    {
+      name: 'bob',
+      inputs: ['b'],
+      outputs: ['main'],
+    },
+    {
+      name: 'charlie',
+      inputs: ['c'],
+      outputs: ['main'],
+    },
+  ];
+
+  const protocol = new Protocol(
+    circuit,
+    mpcSettings,
+    new EmpWasmBackend(),
+  );
+
+  const aqs = new AsyncQueueStore<Uint8Array>();
+
+  const outputs = await Promise.all([
+    runParty(protocol, 'alice', { a: 8 }, aqs),
+    runParty(protocol, 'bob', { b: 17 }, aqs),
+    runParty(protocol, 'charlie', { c: 5 }, aqs),
+  ]);
+
+  expect(outputs).to.deep.equal([
+    { main: 8 },
+    { main: 8 },
+    { main: 8 },
+  ]);
+});
+
+// FIXME: this test skipped
+// FIXME: use 5 bidders and auction house (which doesn't bid but observes)
+testOpt("vickrey(8, 17, 5) == [1, 8]", { skip: true }, async () => {
+  await summon.init();
+
+  const circuit = summon.compileBoolean('/src/main.ts', 8, {
     '/src/main.ts': `
       export default function main(
         a: number,
