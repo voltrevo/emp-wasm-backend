@@ -11,7 +11,6 @@ type EmpGate = (
 
 export default class EmpCircuit {
   private bristol: Bristol;
-  private info: Circuit['info'];
   public originalCircuit: Circuit;
 
   private metadata: {
@@ -41,7 +40,6 @@ export default class EmpCircuit {
     mpcSettings: MpcSettings,
   ) {
     this.bristol = parseBristol(circuit.bristol);
-    this.info = circuit.info;
     this.originalCircuit = circuit;
 
     const partyNamesSet = new Set<string>();
@@ -94,7 +92,7 @@ export default class EmpCircuit {
 
     for (const inputName of allInputsInPartyOrder) {
       const width = this.getInputWidth(inputName);
-      const oldWireId = this.info.input_name_to_wire_index[inputName];
+      const oldWireId = this.originalCircuit.info.input_name_to_wire_index[inputName];
       assert(oldWireId !== undefined, `Input ${inputName} not found`);
 
       for (let i = 0; i < width; i++) {
@@ -103,7 +101,7 @@ export default class EmpCircuit {
       }
     }
 
-    const oldFirstOutputWireId = this.info.output_name_to_wire_index[this.outputs[0]];
+    const oldFirstOutputWireId = this.originalCircuit.info.output_name_to_wire_index[this.outputs[0]];
 
     for (const g of this.bristol.gates) {
       let outputWireId: number;
@@ -392,7 +390,7 @@ export default class EmpCircuit {
 
     for (const outputName of this.outputs) {
       const width = this.getOutputWidth(outputName);
-      const oldWireId = this.info.output_name_to_wire_index[outputName];
+      const oldWireId = this.originalCircuit.info.output_name_to_wire_index[outputName];
 
       let value = 0;
 
