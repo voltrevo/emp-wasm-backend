@@ -1,7 +1,7 @@
 # emp-wasm-backend
 
 Backend for [mpc-framework](https://github.com/voltrevo/mpc-framework) powered
-by [emp-toolkit/emp-ag2pc](https://github.com/emp-toolkit/emp-ag2pc) (via
+by [emp-ag2pc](https://github.com/emp-toolkit/emp-ag2pc) and [emp-agmpc](https://github.com/emp-toolkit/emp-agmpc) (via
 [emp-wasm](https://github.com/voltrevo/emp-wasm)).
 
 ## Usage
