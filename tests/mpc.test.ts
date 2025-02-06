@@ -51,6 +51,79 @@ test("max(3, 5) === 5", async () => {
   expect(outputs).to.deep.equal([{ main: 5 }, { main: 5 }]);
 });
 
+test("vickrey(8, 17, 5) == [1, 8]", async () => {
+  await summon.init();
+
+  const circuit = summon.compileBoolean('/src/main.ts', 8, {
+    '/src/main.ts': `
+      export default function main(
+        a: number,
+        b: number,
+        c: number,
+      ) {
+        const nums = [a, b, c];
+
+        const winner = 0;
+        const highest = a;
+        const secondHighest = 0;
+
+        for (let i = 1; i < nums.length; i++) {
+          if (nums[i] > highest) {
+            secondHighest = highest;
+            highest = nums[i];
+            winner = i;
+          } else if (nums[i] > secondHighest) {
+            secondHighest = nums[i];
+          }
+        }
+
+        return [winner, secondHighest];
+      }
+    `,
+  });
+
+  const mpcSettings = [
+    {
+      name: 'alice',
+      inputs: ['a'],
+      outputs: ['main[0]', 'main[1]'],
+    },
+    {
+      name: 'bob',
+      inputs: ['b', 'c'],
+      outputs: ['main[0]', 'main[1]'],
+    },
+    // {
+    //   name: 'charlie',
+    //   inputs: ['c'],
+    //   outputs: ['main[0]', 'main[1]'],
+    // },
+  ];
+
+  const protocol = new Protocol(
+    circuit,
+    mpcSettings,
+    new EmpWasmBackend(),
+  );
+
+  const aliceQueue = new AsyncQueue<Uint8Array>();
+  const bobQueue = new AsyncQueue<Uint8Array>();
+
+  const outputs = await Promise.all([
+    runSide(protocol, 'alice', { a: 8 }, aliceQueue, bobQueue),
+    runSide(protocol, 'bob', { b: 17, c: 5 }, aliceQueue, bobQueue),
+    // runSide(protocol, 'charlie', { c: 5 }, aliceQueue, bobQueue),
+  ]);
+
+  expect(outputs).to.deep.equal([
+    // Participant index 1 (Bob) wins the auction with the highest bid, but only
+    // pays the second highest bid. His actual bid is kept secret.
+    { 'main[0]': 1, 'main[1]': 8 },
+    { 'main[0]': 1, 'main[1]': 8 },
+    // { 'main[0]': 1, 'main[1]': 8 },
+  ]);
+});
+
 async function runSide(
   protocol: Protocol,
   side: 'alice' | 'bob',
