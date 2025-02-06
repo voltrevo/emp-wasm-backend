@@ -12,6 +12,7 @@ type EmpGate = (
 export default class EmpCircuit {
   private bristol: Bristol;
   private info: Circuit['info'];
+  public originalCircuit: Circuit;
 
   private metadata: {
     wireCount: number;
@@ -21,7 +22,7 @@ export default class EmpCircuit {
   };
   private gates: EmpGate[] = [];
 
-  private partyNames: string[] = [];
+  public partyNames: string[] = [];
   private partyInputs: Record<string, string[]> = {};
   private allInputs: string[];
   private outputs: string[];
@@ -41,6 +42,7 @@ export default class EmpCircuit {
   ) {
     this.bristol = parseBristol(circuit.bristol);
     this.info = circuit.info;
+    this.originalCircuit = circuit;
 
     const partyNamesSet = new Set<string>();
 
@@ -307,6 +309,24 @@ export default class EmpCircuit {
     assert(outputIndex !== -1, `Output ${outputName} not found`);
 
     return this.bristol.outputWidths[outputIndex];
+  }
+
+  hasPartyName(name: string): boolean {
+    return this.partyNames.includes(name);
+  }
+
+  partyNameFromIndex(index: number): string {
+    const partyName = this.partyNames[index];
+    assert(partyName !== undefined, `Party index ${index} not found`);
+
+    return partyName;
+  }
+
+  partyIndexFromName(name: string): number {
+    const index = this.partyNames.indexOf(name);
+    assert(index !== -1, `Party name ${name} not found`);
+
+    return index;
   }
 
   getInputBitsPerParty(): number[] {
