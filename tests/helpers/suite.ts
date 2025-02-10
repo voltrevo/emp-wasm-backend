@@ -2,6 +2,7 @@ type TestDefinition = {
   name: string,
   options: {
     skip?: boolean,
+    only?: boolean,
   },
   fn: () => unknown,
 };
@@ -43,12 +44,14 @@ export async function runSuite() {
   const capturedSuite = suite;
   suite = [];
 
+  const hasOnly = capturedSuite.some(({ options }) => options.only);
+
   console.log(`Running ${capturedSuite.length} tests...`);
 
   const puppeteerDetected = (globalThis as any).reportToPuppeteer !== undefined;
 
   for (const { name, options, fn } of capturedSuite) {
-    if (options.skip) {
+    if (options.skip || (hasOnly && !options.only)) {
       console.log(`🟡 SKIPPED: ${name}`);
       continue;
     }
