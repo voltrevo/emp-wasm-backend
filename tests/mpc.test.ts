@@ -5,7 +5,7 @@ import * as summon from 'summon-ts';
 
 import { EmpWasmBackend } from '../src';
 
-import { test, testOpt } from './helpers/suite';
+import { test } from './helpers/suite';
 import AsyncQueueStore from './helpers/AsyncQueueStore';
 
 test("max(3, 5) === 5", async () => {
@@ -116,12 +116,8 @@ test("middle(8, 17, 5) == 8", async () => {
   ]);
 });
 
-// FIXME: this test is skipped
 // FIXME: use 5 bidders and auction house (which doesn't bid but observes)
-// NOTE:  this circuit also failed with consensus on the same bad outputs before
-//        the N parties upgrade, so there's something else going on:
-//        https://github.com/voltrevo/emp-wasm-backend/commit/be67477
-testOpt("vickrey(8, 17, 5) == [1, 8]", { skip: true }, async () => {
+test("vickrey(8, 17, 5) == [1, 8]", async () => {
   await summon.init();
 
   const circuit = summon.compileBoolean('/src/main.ts', 8, {

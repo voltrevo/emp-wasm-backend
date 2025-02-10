@@ -250,11 +250,13 @@ export default class EmpCircuit {
       inputBits1 = 0;
     }
 
+    const wireCount = this.nextWireId;
+
     this.metadata = {
-      wireCount: this.nextWireId,
+      wireCount,
       inputBits0,
       inputBits1,
-      outputBits: sum(this.outputs.map((n) => this.getOutputWidth(n))),
+      outputBits: wireCount - this.firstOutputWireId,
     };
   }
 
