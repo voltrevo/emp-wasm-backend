@@ -1,6 +1,6 @@
 {
   "name": "emp-wasm-backend",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Backend for mpc-framework powered by emp-toolkit",
   "type": "module",
   "main": "dist/src/index.js",
@@ -31,7 +31,7 @@
     "chai": "^5.1.2",
     "ee-typed": "^0.1.1",
     "glob": "^11.0.1",
-    "mpc-framework": "^0.1.4",
+    "mpc-framework": "^0.2.0",
     "puppeteer-core": "^24.1.0",
     "summon-ts": "^0.2.5",
     "tsx": "^4.9.3",
@@ -39,10 +39,10 @@
     "vite": "^6.0.7"
   },
   "dependencies": {
-    "emp-wasm": "^0.2.0",
+    "@msgpack/msgpack": "^3.1.1",
+    "@noble/hashes": "^1.7.1",
+    "emp-wasm": "^0.2.2",
     "mpc-framework-common": "^0.1.1",
-    "msgpackr": "^1.11.0",
-    "sha3": "^2.1.4",
     "sort-keys": "^5.1.0"
   }
 }
