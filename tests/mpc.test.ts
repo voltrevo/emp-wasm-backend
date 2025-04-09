@@ -11,7 +11,7 @@ import AsyncQueueStore from './helpers/AsyncQueueStore';
 test("max(3, 5) === 5", async () => {
   await summon.init();
 
-  const circuit = summon.compileBoolean('/src/main.ts', 16, {
+  const { circuit } = summon.compileBoolean('/src/main.ts', 16, {
     '/src/main.ts': `
       export default function main(a: number, b: number) {
         return a > b ? a : b;
@@ -51,7 +51,7 @@ test("max(3, 5) === 5", async () => {
 test("middle(8, 17, 5) == 8", async () => {
   await summon.init();
 
-  const circuit = summon.compileBoolean('/src/main.ts', 8, {
+  const { circuit } = summon.compileBoolean('/src/main.ts', 8, {
     '/src/main.ts': `
       export default function main(
         a: number,
@@ -60,8 +60,8 @@ test("middle(8, 17, 5) == 8", async () => {
       ) {
         const nums = [a, b, c];
 
-        const highest = a;
-        const secondHighest = 0;
+        let highest = a;
+        let secondHighest = 0;
 
         for (let i = 1; i < nums.length; i++) {
           if (nums[i] > highest) {
@@ -120,7 +120,7 @@ test("middle(8, 17, 5) == 8", async () => {
 test("vickrey(8, 17, 5) == [1, 8]", async () => {
   await summon.init();
 
-  const circuit = summon.compileBoolean('/src/main.ts', 8, {
+  const { circuit } = summon.compileBoolean('/src/main.ts', 8, {
     '/src/main.ts': `
       export default function main(
         a: number,
@@ -129,9 +129,9 @@ test("vickrey(8, 17, 5) == [1, 8]", async () => {
       ) {
         const nums = [a, b, c];
 
-        const winner = 0;
-        const highest = a;
-        const secondHighest = 0;
+        let winner = 0;
+        let highest = a;
+        let secondHighest = 0;
 
         for (let i = 1; i < nums.length; i++) {
           if (nums[i] > highest) {

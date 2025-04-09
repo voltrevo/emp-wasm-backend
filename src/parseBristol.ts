@@ -1,9 +1,7 @@
 export type Gate =
   | { type: 'AND'; left: number; right: number; output: number }
   | { type: 'XOR'; left: number; right: number; output: number }
-  | { type: 'OR'; left: number; right: number; output: number }
-  | { type: 'NOT'; input: number; output: number }
-  | { type: 'COPY'; input: number; output: number };
+  | { type: 'INV'; input: number; output: number }
 
 export type Bristol = {
   wireCount: number;
@@ -123,7 +121,6 @@ export default function parseBristol(input: string): Bristol {
     switch (gateType) {
       case 'AND':
       case 'XOR':
-      case 'OR':
         if (numGateInputs !== 2 || numGateOutputs !== 1) {
           throw new Error(
             `Invalid inputs/outputs for ${gateType} at line ${i + 1
@@ -138,8 +135,7 @@ export default function parseBristol(input: string): Bristol {
         });
         break;
 
-      case 'NOT':
-      case 'COPY':
+      case 'INV':
         if (numGateInputs !== 1 || numGateOutputs !== 1) {
           throw new Error(
             `Invalid inputs/outputs for ${gateType} at line ${i + 1
