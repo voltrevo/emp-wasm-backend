@@ -131,7 +131,7 @@ export default class EmpCircuit {
           break;
         }
 
-        case 'NOT': {
+        case 'INV': {
           outputWireId = this.assignWireId(wireType);
 
           this.gates.push({
@@ -139,50 +139,6 @@ export default class EmpCircuit {
             input: this.getWireId(g.input),
             output: outputWireId,
           });
-
-          break;
-        }
-
-        case 'OR': {
-          // or(a,b) == not(and(not(a), not(b)))
-
-          const notA = this.assignWireId('normal');
-          const notB = this.assignWireId('normal');
-          const notAAndNotB = this.assignWireId('normal');
-          outputWireId = this.assignWireId(wireType);
-
-          this.gates.push(
-            { type: 'INV', input: this.getWireId(g.left), output: notA },
-            { type: 'INV', input: this.getWireId(g.right), output: notB },
-            { type: 'AND', left: notA, right: notB, output: notAAndNotB },
-            { type: 'INV', input: notAAndNotB, output: outputWireId },
-          );
-
-          break;
-        }
-
-        case 'COPY': {
-          outputWireId = this.getWireId(g.input);
-
-          const type = outputWireId >= 0 ? 'normal' : 'output';
-
-          if (type === 'normal' && wireType === 'output') {
-            // We can't just map this wire because it's a normal wire and we
-            // need an output wire. Therefore we need to implement actual
-            // copying, and emp-wasm doesn't provide a copy instruction.
-            // Instead, we can use XOR with a zero wire to copy the value.
-
-            const fixedOutputWireId = this.assignWireId('output');
-
-            this.gates.push({
-              type: 'XOR',
-              left: outputWireId,
-              right: this.getZeroWireId(),
-              output: fixedOutputWireId,
-            });
-
-            outputWireId = fixedOutputWireId;
-          }
 
           break;
         }
@@ -379,7 +335,7 @@ export default class EmpCircuit {
         `Expected input ${inputName} to be a number`,
       );
 
-      for (let i = width - 1; i >= 0; i--) {
+      for (let i = 0; i < width; i++) {
         bits.push((value >> i) & 1 ? true : false);
       }
     }
@@ -399,7 +355,7 @@ export default class EmpCircuit {
       for (let i = 0; i < width; i++) {
         const wireId = this.wireIdMap.get(oldWireId + i);
         assert(wireId !== undefined, `Wire ID ${oldWireId + i} not found`);
-        value |= outputBits[wireId - this.firstOutputWireId] << (width - 1 - i);
+        value |= outputBits[wireId - this.firstOutputWireId] << i;
       }
 
       output[outputName] = value;
