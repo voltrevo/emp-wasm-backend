@@ -235,24 +235,6 @@ export default class EmpCircuit {
     never(type);
   }
 
-  private getZeroWireId(): number {
-    if (this.zeroWireId !== undefined) {
-      return this.zeroWireId;
-    }
-
-    const inputWireId = this.nextWireId > 0 ? 0 : this.assignWireId('normal');
-    this.zeroWireId = this.assignWireId('normal');
-
-    this.gates.push({
-      type: 'XOR',
-      left: inputWireId,
-      right: inputWireId,
-      output: this.zeroWireId,
-    });
-
-    return this.zeroWireId;
-  }
-
   private getInputWidth(inputName: string): number {
     const inputIndex = this.allInputs.indexOf(inputName);
     assert(inputIndex !== -1, `Input ${inputName} not found`);
