@@ -31,9 +31,9 @@
     "chai": "^5.1.2",
     "ee-typed": "^0.1.1",
     "glob": "^11.0.1",
-    "mpc-framework": "^0.2.0",
+    "mpc-framework": "^0.2.1",
     "puppeteer-core": "^24.1.0",
-    "summon-ts": "^0.5.1",
+    "summon-ts": "^0.5.3",
     "tsx": "^4.9.3",
     "typescript": "^5.4.5",
     "vite": "^6.0.7"
